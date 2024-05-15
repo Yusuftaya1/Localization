@@ -82,7 +82,7 @@ def main(args=None):
     executor.add_node(map_sub)
     executor.add_node(localization)
 
-    rclpy.spin(executor)
+    rclpy.spin(executor=executor)
     rclpy.shutdown()
 
 if __name__ == '__main__':

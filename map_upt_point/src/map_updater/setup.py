@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'node_ = map_updater.node_:main',
-            'try1= map_updater.localization_try1:main'
+            'try1= map_updater.localization_try1:main',
+            'try2= map_updater.localization_try2:main'
         ],
     },
 )

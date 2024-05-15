@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid, Odometry
+import numpy as np
 
 class Localization(Node):
     def __init__(self):
@@ -11,17 +12,17 @@ class Localization(Node):
         self.odom_sub = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
 
     def map_callback(self, msg):
-        map_data = list(msg.data)
-        map_json = {
+        map_list = list(msg.data)
+        self.map_json = {
             "msg_type": "MAP",
-            "width": msg.info.width,
-            "height": msg.info.height,
+            "width": msg.info.width,#112
+            "height": msg.info.height,#103
             "resolution": msg.info.resolution,
-            "data": map_data,
+            "data": map_list,
             "end": "*end\n"
         }
-        self.map_data = map_json
-        self.update_map()
+        self.map_array = np.array(map_list).reshape(int(self.map_json["width"]), int(self.map_json["height"]))
+        print(self.map_array.shape)
 
     def odom_callback(self, msg):
         odom_data = {
@@ -31,30 +32,16 @@ class Localization(Node):
             "w": msg.pose.pose.orientation.w,
             "end": "*end\n"
         }
-        self.odom_data = odom_data
-        self.update_map()
 
     def transform_to_cell(self,x,y,resolution):
-
         self.reso=resolution
         self.cellx = int(x/self.reso)
         self.celly = int(y/self.reso)
         #self.cellw = 
         return self.cellx, self.celly #self.cellw
-
+    
     def update_map(self):
-        if self.map_data is not None and self.odom_data is not None:
-            cellx , celly = self.transform_to_cell(self.odom_data["x"],self.odom_data["y"],self.map_data["resolution"])#,odom_data["w"]
-            if 0 <= cellx < self.map_data["width"] and 0 <= celly < self.map_data["height"]:
-                self.map_data["data"][celly][cellx] = 0
-            else:
-                self.get_logger().warn("Robotun konumu harita sınırlarının dışında.")
-        else:
-            self.get_logger().warn("Harita verisi veya odometri verisi mevcut değil.")
-
-        ## create publisher
-        ## map array update procces
-        ## publish updated map
+        cellx , celly = self.transform_to_cell(self.odom_data["x"],self.odom_data["y"],self.map_data["resolution"])#,odom_data["w"]
 
 def main(args=None):
     rclpy.init(args=args)
